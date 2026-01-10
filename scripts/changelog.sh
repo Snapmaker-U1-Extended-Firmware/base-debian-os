@@ -3,7 +3,7 @@
 VERSION="${1:-unknown}"
 COMMIT="${2:-$(git rev-parse HEAD 2>/dev/null || echo 'unknown')}"
 
-echo "## Debian Trixie (arm64) Base Rootfs"
+echo "## Debian (arm64) Base Rootfs"
 echo ""
 echo "**Version:** $VERSION"
 echo "**Built:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
@@ -27,5 +27,5 @@ echo "## Package List"
 echo ""
 echo '```'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-grep -v '^#' "$SCRIPT_DIR/../packages/u1-trixie" | grep -v '^$'
+grep -v '^#' "$SCRIPT_DIR/../packages/u1-debian" | grep -v '^$'
 echo '```'
