@@ -29,6 +29,14 @@ ROOTFS_DIR="${TMP_DIR}/rootfs-$$"
 cleanup() {
   if [[ -d "$ROOTFS_DIR" ]]; then
     echo ">> Cleaning up temporary rootfs..."
+    # Unmount any leftover mounts
+    for mount in proc sys dev/pts dev; do
+      if mountpoint -q "$ROOTFS_DIR/$mount" 2>/dev/null; then
+        umount "$ROOTFS_DIR/$mount" || true
+      fi
+    done
+    # Force remove test files that might be bind-mounted
+    rm -f "$ROOTFS_DIR/test-dev-null" 2>/dev/null || true
     rm -rf "$ROOTFS_DIR"
   fi
 }

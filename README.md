@@ -32,10 +32,10 @@ See [kernel/README.md](kernel/README.md) for detailed kernel build documentation
 ```
 
 This downloads the stock U1 firmware (~200MB) and extracts:
-- `kernel/dump-original-kernel/modules/` - Proprietary kernel modules
-- `kernel/dump-original-kernel/resource.img` - Boot resources (logo, etc.)
+- `tmp/proprietary/modules/` - Proprietary kernel modules
+- `tmp/proprietary/resource.img` - Boot resources (logo, etc.)
 
-These files are not in git but are required for kernel builds.
+These files are in tmp/ (excluded from git) and are required for kernel builds.
 
 ## Quick Start
 

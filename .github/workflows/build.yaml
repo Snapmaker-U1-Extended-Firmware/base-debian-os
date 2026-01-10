@@ -8,8 +8,52 @@ on:
   workflow_dispatch:
 
 jobs:
+  prepare:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      kernel_sha: ${{ steps.kernel.outputs.sha }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set version
+      id: version
+      run: |
+        VERSION="$(date +%Y%m%d)-${GITHUB_SHA::7}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
+
+    - name: Prepare proprietary files
+      run: ./dev.sh prepare proprietary
+
+    - name: Prepare kernel source
+      id: kernel
+      run: |
+        ./dev.sh prepare kernel 6.1
+        KERNEL_SHA=$(cd kernel/rockchip-kernel && git rev-parse HEAD)
+        echo "sha=${KERNEL_SHA}" >> $GITHUB_OUTPUT
+
+    - name: Upload proprietary files (internal only)
+      uses: actions/upload-artifact@v4
+      with:
+        name: proprietary-files
+        path: tmp/proprietary/
+        retention-days: 1
+        if-no-files-found: error
+
+    - name: Upload kernel source
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-source-6.1
+        path: kernel/rockchip-kernel/
+        retention-days: 1
+        if-no-files-found: error
+
   build-kernel:
     runs-on: ubuntu-24.04-arm
+    needs: prepare
     strategy:
       matrix:
         kernel_profile: ["basic", "basic-devel", "extended", "extended-devel"]
@@ -26,8 +70,25 @@ jobs:
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "Version: ${VERSION}"
 
-    - name: Clone Rockchip kernel
-      run: ./dev.sh ./scripts/clone-rockchip-kernel.sh 6.1
+    - name: Download proprietary files
+      uses: actions/download-artifact@v4
+      with:
+        name: proprietary-files
+        path: tmp/proprietary/
+
+    - name: Download kernel source
+      uses: actions/download-artifact@v4
+      with:
+        name: kernel-source-6.1
+        path: kernel/rockchip-kernel/
+
+    - name: Setup ccache
+      uses: actions/cache@v4
+      with:
+        path: tmp/ccache
+        key: ccache-6.1-${{ needs.prepare.outputs.kernel_sha }}
+        restore-keys: |
+          ccache-6.1-
 
     - name: Build kernel
       run: |

@@ -33,8 +33,8 @@ KERNEL_BRANCH=$(get_kernel_branch "$KERNEL_VERSION")
 KERNEL_DIR="$KERNEL_SOURCE_DIR/rockchip-kernel"
 KERNEL_CONFIG_DIR="$KERNEL_SOURCE_DIR/config"
 KERNEL_DTS_DIR="$KERNEL_SOURCE_DIR/dts"
-KERNEL_MODULES_DIR="$KERNEL_SOURCE_DIR/dump-original-kernel/modules"
-KERNEL_RESOURCE="$KERNEL_SOURCE_DIR/dump-original-kernel/resource.img"
+KERNEL_MODULES_DIR="$REPO_ROOT/tmp/proprietary/modules"
+KERNEL_RESOURCE="$REPO_ROOT/tmp/proprietary/resource.img"
 BOOT_ITS_TEMPLATE="$KERNEL_SOURCE_DIR/boot.its.template"
 
 STOCK_CONFIG="$KERNEL_CONFIG_DIR/stock.config"
@@ -42,9 +42,9 @@ STOCK_DTS="$KERNEL_DTS_DIR/rk3562-snapmaker-u1-stock.dts"
 DTS_NAME="rk3562-snapmaker-u1-stock.dts"
 DTB_NAME="rk3562-snapmaker-u1-stock.dtb"
 
-# Build directories (process-isolated)
+# Build directories
 TMP_DIR="$REPO_ROOT/tmp"
-BUILD_DIR="$TMP_DIR/kernel-$$"
+BUILD_DIR="$TMP_DIR/kernel-$BUILD_PROFILE-$KERNEL_VERSION"
 BOOT_BUILD_DIR="$BUILD_DIR/boot"
 
 # Output paths

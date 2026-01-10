@@ -2,6 +2,44 @@
 
 set -e
 
+# Handle prepare command (runs outside container)
+if [[ "$1" == "prepare" ]]; then
+    shift
+    case "$1" in
+        help|--help|-h|"")
+            cat <<EOF
+Prepare build dependencies (runs outside container)
+
+Usage:
+  ./dev.sh prepare <command>
+
+Commands:
+  proprietary   Download stock firmware and extract proprietary files
+  kernel        Clone Rockchip kernel source
+  help          Show this help
+
+Examples:
+  ./dev.sh prepare proprietary
+  ./dev.sh prepare kernel
+
+EOF
+            exit 0
+            ;;
+        proprietary)
+            exec ./scripts/prepare-proprietary.sh
+            ;;
+        kernel)
+            shift
+            exec ./scripts/prepare-kernel.sh "$@"
+            ;;
+        *)
+            echo "Unknown prepare command: $1"
+            echo "Run './dev.sh prepare help' for usage."
+            exit 1
+            ;;
+    esac
+fi
+
 # Show top-level help if requested
 if [[ "$1" == "help" || "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     cat <<EOF
@@ -74,10 +112,18 @@ fi
 TTY_FLAG=""
 [[ -t 0 ]] && TTY_FLAG="-it"
 
-# Pass through environment variables
-ENV_FLAGS="-e GIT_VERSION -e PROFILE -e VERSION -e OUTPUT_DIR"
+# Pass through environment variables (avoid PROFILE and VERSION which conflict with kernel build)
+ENV_FLAGS="-e GIT_VERSION -e OUTPUT_DIR"
+
+# Use tmp/ccache in CI, named volume locally
+if [[ -n "$CI" ]]; then
+  mkdir -p "$PWD/tmp/ccache"
+  CCACHE_MOUNT="-v $PWD/tmp/ccache:/tmp/ccache"
+else
+  CCACHE_MOUNT="-v base-debian-os-ccache:/tmp/ccache"
+fi
 
 exec docker run --rm $TTY_FLAG $ENV_FLAGS --privileged \
   -w "$PWD" -v "$PWD:$PWD" \
-  -v base-debian-os-ccache:/tmp/ccache \
+  $CCACHE_MOUNT \
   "$IMAGE_NAME" "$@"

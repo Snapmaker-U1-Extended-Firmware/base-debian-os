@@ -11,9 +11,9 @@ kernel/rockchip-kernel/
 *.ko
 
 # Stock firmware and extracted proprietary files
-firmware/
-kernel/dump-original-kernel/modules/
-kernel/dump-original-kernel/resource.img
+tmp/firmware/
+tmp/proprietary/
+tmp/extracted/
 
 # Tools (built binaries)
 tools/upfile/upfile

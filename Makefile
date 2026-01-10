@@ -2,23 +2,27 @@ include vars.mk
 
 # ================= Configuration =================
 
-KERNEL_VERSION ?= 6.1
-BUILD_PROFILE ?= extended
+# Accept KVER as user-facing parameter, map to KERNEL_VERSION internally
+KERNEL_VERSION := $(or $(KVER),6.1)
+BUILD_PROFILE := $(or $(PROFILE),extended)
 OUTPUT_DIR ?= output
 
 KERNEL_PROFILES := basic basic-devel extended extended-devel
 
+# Force override VERSION to prevent command-line pollution of kernel build
+override VERSION :=
+
 # Generate version tag
 GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo 'local')
-VERSION := $(shell date +%Y%m%d)-$(GIT_SHA)
+BUILD_VERSION := $(shell date +%Y%m%d)-$(GIT_SHA)
 
 # Output files
-KERNEL_IMG := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(VERSION).img
-KERNEL_VMLINUZ := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(VERSION)-vmlinuz
-KERNEL_DTB := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(VERSION).dtb
-KERNEL_CONFIG := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(VERSION).config
-KERNEL_MODULES := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(VERSION)-modules.tar.gz
-ROOTFS_TGZ := $(OUTPUT_DIR)/debian-rootfs-trixie-$(VERSION).tgz
+KERNEL_IMG := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(BUILD_VERSION).img
+KERNEL_VMLINUZ := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(BUILD_VERSION)-vmlinuz
+KERNEL_DTB := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(BUILD_VERSION).dtb
+KERNEL_CONFIG := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(BUILD_VERSION).config
+KERNEL_MODULES := $(OUTPUT_DIR)/kernel-$(BUILD_PROFILE)-$(KERNEL_VERSION)-$(BUILD_VERSION)-modules.tar.gz
+ROOTFS_TGZ := $(OUTPUT_DIR)/debian-rootfs-trixie-$(BUILD_VERSION).tgz
 
 # ================= Help =================
 
@@ -27,9 +31,9 @@ help:
 	@echo "Snapmaker U1 Custom OS Build System"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make kernel PROFILE=<profile> [VERSION=<version>] [OUTPUT_DIR=<dir>]"
+	@echo "  make kernel PROFILE=<profile> [KVER=<version>] [OUTPUT_DIR=<dir>]"
 	@echo "  make rootfs [OUTPUT_DIR=<dir>]"
-	@echo "  make all PROFILE=<profile> [VERSION=<version>] [OUTPUT_DIR=<dir>]"
+	@echo "  make all PROFILE=<profile> [KVER=<version>] [OUTPUT_DIR=<dir>]"
 	@echo "  make clean"
 	@echo ""
 	@echo "Kernel Profiles:"
@@ -40,17 +44,17 @@ help:
 	@echo ""
 	@echo "Variables:"
 	@echo "  PROFILE        - Build profile (default: $(BUILD_PROFILE))"
-	@echo "  VERSION        - Kernel version: 6.1 or 6.6 (default: $(KERNEL_VERSION))"
+	@echo "  KVER           - Kernel version: 6.1 or 6.6 (default: $(KERNEL_VERSION))"
 	@echo "  OUTPUT_DIR     - Output directory (default: $(OUTPUT_DIR))"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make kernel PROFILE=basic-devel"
-	@echo "  make kernel PROFILE=extended VERSION=6.1"
-	@echo "  make all PROFILE=extended-devel"
+	@echo "  make kernel PROFILE=extended KVER=6.1"
+	@echo "  make all PROFILE=basic KVER=6.6"
 	@echo "  make rootfs"
 	@echo ""
 	@echo "Launch QEMU:"
-	@echo "  make qemu PROFILE=extended-devel [VERSION=6.1]"
+	@echo "  make qemu PROFILE=extended-devel [KVER=6.1]"
 
 # ================= Kernel Build =================
 
@@ -126,20 +130,20 @@ tools/%: FORCE
 	make -C $@
 
 .PHONY: firmware
-firmware: firmware/$(FIRMWARE_FILE)
+firmware: tmp/firmware/$(FIRMWARE_FILE)
 
-firmware/$(FIRMWARE_FILE):
-	@mkdir -p firmware
+tmp/firmware/$(FIRMWARE_FILE):
+	@mkdir -p tmp/firmware
 	wget -O $@.tmp "https://public.resource.snapmaker.com/firmware/U1/$(FIRMWARE_FILE)"
 	echo "$(FIRMWARE_SHA256)  $@.tmp" | sha256sum -c --quiet
 	mv $@.tmp $@
 
 .PHONY: extract
-extract: firmware/$(FIRMWARE_FILE) tools
+extract: tmp/firmware/$(FIRMWARE_FILE) tools
 	./scripts/extract_squashfs.sh $< tmp/extracted
 
 .PHONY: extract-proprietary
-extract-proprietary: firmware/$(FIRMWARE_FILE) tools
+extract-proprietary: tmp/firmware/$(FIRMWARE_FILE) tools
 	./scripts/extract-proprietary.sh
 
 .PHONY: FORCE
