@@ -9,3 +9,7 @@ apt-get update
 echo ">> Installing Python 3.11 and dependencies from bookworm..."
 apt-get install -t bookworm -y python3 python3-venv python3-dev python3-pip
 python3 --version
+
+echo ">> Cleaning up bookworm repository from apt sources..."
+rm /etc/apt/sources.list.d/bookworm.list
+apt-get update
