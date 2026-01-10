@@ -45,6 +45,9 @@ mosquitto-clients
 openssh-client
 openssh-server
 
+# === Web Server ===
+nginx
+
 # === System Utilities ===
 # Basic command-line tools for system administration
 vim
