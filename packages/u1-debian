@@ -62,6 +62,7 @@ packagekit
 # === Development Tools ===
 # Build tools and compilers for native compilation
 build-essential
+pkg-config
 
 # === Python Environment ===
 # Python runtime and package management
@@ -70,6 +71,7 @@ python3-venv
 python3-dev
 python3-pip
 python3-libgpiod
+libffi-dev
 
 # === Libraries - Network ===
 libcurl4
