@@ -2,6 +2,67 @@
 
 set -e
 
+# Show top-level help if requested
+if [[ "$1" == "help" || "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
+    cat <<EOF
+Snapmaker U1 Custom Debian OS - Development Environment
+
+Usage:
+  ./dev.sh make <target> [PROFILE=<profile>] [VERSION=<version>]
+  ./dev.sh launch <args>
+  ./dev.sh <command>
+
+Commands:
+  make          Run Makefile targets (kernel, rootfs, all, qemu, clean)
+  launch        Launch QEMU with built kernel
+  help          Show this help message
+
+Examples:
+  ./dev.sh make help                           Show all make targets
+  ./dev.sh make kernel PROFILE=extended-devel
+  ./dev.sh make all PROFILE=basic VERSION=6.1
+  ./dev.sh launch tmp/kernel-artifacts/boot.img
+
+For detailed build options:
+  ./dev.sh make help
+
+EOF
+    exit 0
+fi
+
+# Handle launch command locally (not in container)
+if [[ "$1" == "launch" ]]; then
+    shift
+    # Show help if requested
+    if [[ "$1" == "help" || "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
+        cat <<EOF
+Launch QEMU with built kernel
+
+Usage:
+  ./dev.sh launch <boot.img> [qemu-args...]
+
+Arguments:
+  boot.img      Path to boot FIT image
+  qemu-args     Additional QEMU arguments (optional)
+
+Examples:
+  ./dev.sh launch output/kernel-extended-devel-6.1-20260110-abc123.img
+  ./dev.sh launch output/kernel-basic-6.1-20260110-abc123.img -nographic
+
+The launcher configures QEMU with:
+  - ARM64 virt machine with Cortex-A72
+  - 2GB RAM
+  - Serial console on ttyAMA0
+  - Verbose kernel boot output
+
+Press Ctrl-A X to exit QEMU
+
+EOF
+        exit 0
+    fi
+    exec ./scripts/launch-qemu.sh "$@"
+fi
+
 IMAGE_NAME="base-debian-os-dev"
 BUILD_CONTEXT=".github/dev"
 
@@ -13,4 +74,10 @@ fi
 TTY_FLAG=""
 [[ -t 0 ]] && TTY_FLAG="-it"
 
-exec docker run --rm $TTY_FLAG --privileged -w "$PWD" -v "$PWD:$PWD" "$IMAGE_NAME" "$@"
+# Pass through environment variables
+ENV_FLAGS="-e GIT_VERSION -e PROFILE -e VERSION -e OUTPUT_DIR"
+
+exec docker run --rm $TTY_FLAG $ENV_FLAGS --privileged \
+  -w "$PWD" -v "$PWD:$PWD" \
+  -v base-debian-os-ccache:/tmp/ccache \
+  "$IMAGE_NAME" "$@"

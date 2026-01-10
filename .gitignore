@@ -2,3 +2,22 @@ output/
 tmp/
 *.tgz
 *.tar.gz
+
+# Kernel build artifacts
+kernel/rockchip-kernel/
+*.img
+*.lz4
+*.dtb
+*.ko
+
+# Stock firmware and extracted proprietary files
+firmware/
+kernel/dump-original-kernel/modules/
+kernel/dump-original-kernel/resource.img
+
+# Tools (built binaries)
+tools/upfile/upfile
+tools/rk2918_tools/afptool
+tools/rk2918_tools/img_maker
+tools/rk2918_tools/img_unpack
+tools/rk2918_tools/mkkrnlimg

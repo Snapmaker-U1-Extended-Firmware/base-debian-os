@@ -8,8 +8,48 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-kernel:
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      matrix:
+        kernel_profile: ["basic", "basic-devel", "extended", "extended-devel"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set version
+      id: version
+      run: |
+        VERSION="$(date +%Y%m%d)-${GITHUB_SHA::7}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
+
+    - name: Clone Rockchip kernel
+      run: ./dev.sh ./scripts/clone-rockchip-kernel.sh 6.1
+
+    - name: Build kernel
+      run: |
+        ./dev.sh ./scripts/build-kernel.sh \
+          6.1 \
+          ${{ matrix.kernel_profile }} \
+          output/kernel-${{ matrix.kernel_profile }}-6.1-${{ steps.version.outputs.version }}.img
+
+    - name: Upload kernel artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-${{ matrix.kernel_profile }}-6.1-${{ steps.version.outputs.version }}
+        path: |
+          output/kernel-*.img
+          output/kernel-*-vmlinuz
+          output/kernel-*.dtb
+          output/kernel-*.config
+          output/kernel-*-modules.tar.gz
+
   build-debian-rootfs:
     runs-on: ubuntu-24.04-arm
+    needs: build-kernel
     permissions:
       contents: write
     steps:
@@ -25,24 +65,37 @@ jobs:
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "Version: ${VERSION}"
 
+    - name: Download extended kernel artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: kernel-extended-6.1-${{ steps.version.outputs.version }}
+        path: .
+
+    - name: Reconstruct kernel artifacts for rootfs
+      run: |
+        mkdir -p tmp/kernel-artifacts
+        cp output/kernel-extended-6.1-${{ steps.version.outputs.version }}-vmlinuz tmp/kernel-artifacts/Image
+        cp output/kernel-extended-6.1-${{ steps.version.outputs.version }}.dtb tmp/kernel-artifacts/rk3562-snapmaker-u1-stock.dtb
+        tar -xzf output/kernel-extended-6.1-${{ steps.version.outputs.version }}-modules.tar.gz -C tmp/kernel-artifacts
+
     - name: Build Debian rootfs
       run: ./dev.sh ./scripts/debootstrap.sh trixie packages/u1-trixie output/debian-rootfs-trixie-${{ steps.version.outputs.version }}.tgz
 
     - name: Generate Changelog
       run: ./scripts/changelog.sh ${{ steps.version.outputs.version }} ${{ github.sha }} > RELEASE.md
 
-    - name: Upload artifact (non-tag builds)
+    - name: Upload rootfs artifact
       uses: actions/upload-artifact@v4
       with:
         name: debian-rootfs-${{ steps.version.outputs.version }}
-        path: output/debian-rootfs-trixie-*.tgz
+        path: output/debian-rootfs-*.tgz
 
     - name: Release
-      uses: ncipollo/release-action@v1
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: ncipollo/release-action@v1
       with:
         tag: ${{ steps.version.outputs.version }}
         allowUpdates: false
         prerelease: false
         bodyFile: RELEASE.md
-        artifacts: "output/debian-rootfs-trixie-*.tgz"
+        artifacts: "output/debian-rootfs-*.tgz"

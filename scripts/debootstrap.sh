@@ -91,6 +91,13 @@ if [[ -d "$CHROOT_SCRIPTS_DIR" ]]; then
   echo ">> Executing chroot scripts from $CHROOT_SCRIPTS_DIR..."
   cp -rv "$CHROOT_SCRIPTS_DIR" "$ROOTFS_DIR/tmp/chroot-scripts/"
 
+  # If kernel artifacts are provided, make them available in chroot
+  KERNEL_ARTIFACTS_DIR="${REPO_ROOT}/tmp/kernel-artifacts"
+  if [[ -d "$KERNEL_ARTIFACTS_DIR" ]]; then
+    echo ">> Copying kernel artifacts into chroot..."
+    cp -rv "$KERNEL_ARTIFACTS_DIR" "$ROOTFS_DIR/tmp/kernel-artifacts/"
+  fi
+
   for script in "$ROOTFS_DIR/tmp/chroot-scripts"/*.sh; do
     script_name=$(basename "$script")
     echo ">> Running $script_name..."
