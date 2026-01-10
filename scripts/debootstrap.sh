@@ -60,13 +60,17 @@ echo ">> Packages: $PACKAGES"
 export APT_CONFIG=/dev/null
 export DEBIAN_FRONTEND=noninteractive
 
-debootstrap \
+if ! debootstrap \
   --arch="$ARCH" \
   --foreign \
   --include="$PACKAGES" \
   "$SUITE" \
   "$ROOTFS_DIR" \
-  "$MIRROR"
+  "$MIRROR"; then
+  echo ">> Debootstrap failed! Log contents:"
+  cat "$ROOTFS_DIR/debootstrap/debootstrap.log" 2>/dev/null || echo "No log file found"
+  exit 1
+fi
 
 echo ">> Disabling apt proxy auto-detection..."
 mkdir -p "$ROOTFS_DIR/etc/apt/apt.conf.d"
@@ -76,7 +80,11 @@ Acquire::https::Proxy-Auto-Detect "";
 EOF
 
 echo ">> Running second stage bootstrap..."
-chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage
+if ! chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage; then
+  echo ">> Second stage bootstrap failed! Log contents:"
+  cat "$ROOTFS_DIR/debootstrap/debootstrap.log" 2>/dev/null || echo "No log file found"
+  exit 1
+fi
 
 echo ">> Cleaning up..."
 rm -rf "$ROOTFS_DIR/debootstrap"
