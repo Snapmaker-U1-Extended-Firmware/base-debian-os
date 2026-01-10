@@ -1,0 +1,48 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-debian-rootfs:
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set version
+      id: version
+      run: |
+        VERSION="$(date +%Y%m%d)-${GITHUB_SHA::7}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
+
+    - name: Build Debian rootfs
+      run: ./dev.sh ./scripts/debootstrap.sh trixie packages/u1-trixie output/debian-rootfs-trixie-${{ steps.version.outputs.version }}.tgz
+
+    - name: Generate Changelog
+      run: ./scripts/changelog.sh ${{ steps.version.outputs.version }} ${{ github.sha }} > RELEASE.md
+
+    - name: Upload artifact (non-tag builds)
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-rootfs-${{ steps.version.outputs.version }}
+        path: output/debian-rootfs-trixie-*.tgz
+
+    - name: Release
+      uses: ncipollo/release-action@v1
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      with:
+        tag: ${{ steps.version.outputs.version }}
+        allowUpdates: false
+        prerelease: false
+        bodyFile: RELEASE.md
+        artifacts: "output/debian-rootfs-trixie-*.tgz"

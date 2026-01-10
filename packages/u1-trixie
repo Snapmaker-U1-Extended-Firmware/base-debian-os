@@ -1,0 +1,60 @@
+# U1 Debian Trixie (arm64) Base Rootfs Packages
+# Lines starting with # are comments and will be ignored
+
+# === Core System ===
+# Essential for basic system operation and boot
+systemd
+systemd-sysv
+systemd-resolved
+udev
+dbus
+
+# === Package Management ===
+# Required for installing additional packages and security updates
+apt
+ca-certificates
+
+# === Localization ===
+# Support for different languages and character encodings
+locales
+
+# === User Management ===
+# Enables privilege escalation and multi-user support
+sudo
+
+# === Networking - Core ===
+# Basic network stack and utilities for connectivity
+iproute2
+iputils-ping
+netbase
+ifupdown
+
+# === Networking - WiFi ===
+# Required for wireless connectivity (BCM43438a1 chipset support)
+wpasupplicant
+
+# === Remote Access ===
+# SSH server and client for remote administration
+openssh-client
+openssh-server
+
+# === System Utilities ===
+# Basic command-line tools for system administration
+vim
+less
+procps
+
+# === Libraries - Network ===
+# libcurl4t64: HTTP/HTTPS client library used by various U1 services
+libcurl4t64
+
+# === Libraries - GUI Support ===
+# Required by the U1 GUI application (/opt/lava/bin/gui)
+libfreetype6
+libglib2.0-0t64
+
+# === Libraries - Communication ===
+# libpaho-mqtt1.3: MQTT protocol support for IoT communication
+# libbluetooth3: Bluetooth stack for wireless peripherals
+libpaho-mqtt1.3
+libbluetooth3
