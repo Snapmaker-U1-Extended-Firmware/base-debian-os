@@ -6,6 +6,7 @@
 systemd
 systemd-sysv
 systemd-resolved
+libpam-systemd
 udev
 dbus
 
