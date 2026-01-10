@@ -16,7 +16,7 @@ This repository builds a minimal Debian rootfs tarball for use in embedded syste
 Example:
 
 ```bash
-./dev.sh ./scripts/debootstrap.sh bookworm packages/u1-debian debian-rootfs-bookworm.tgz
+./dev.sh ./scripts/debootstrap.sh trixie packages/u1-trixie debian-rootfs-trixie.tgz
 ```
 
 ## Requirements

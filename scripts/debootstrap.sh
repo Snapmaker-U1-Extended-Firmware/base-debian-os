@@ -11,7 +11,7 @@ if [[ $# -ne 3 ]]; then
   echo "  out.tgz         Output tarball path"
   echo ""
   echo "Example:"
-  echo "  $0 bookworm debian-Packages debian-rootfs-bookworm.tgz"
+  echo "  $0 trixie debian-Packages debian-rootfs-trixie.tgz"
   exit 1
 fi
 

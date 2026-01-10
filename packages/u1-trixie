@@ -74,14 +74,14 @@ python3-libgpiod
 libffi-dev
 
 # === Libraries - Network ===
-libcurl4
+libcurl4t64
 libcurl4-openssl-dev
 libssl-dev
 
 # === Libraries - GUI Support ===
 # Required by the U1 GUI application (/opt/lava/bin/gui)
 libfreetype6
-libglib2.0-0
+libglib2.0-0t64
 
 # === Libraries - Image Processing ===
 libopenjp2-7
