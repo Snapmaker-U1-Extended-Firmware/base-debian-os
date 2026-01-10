@@ -38,7 +38,8 @@ net-tools
 wireless-tools
 
 # === Networking - MQTT ===
-# MQTT broker client tools required by Snapmaker U1 applications
+# MQTT broker tools required by Snapmaker U1 applications
+mosquitto
 mosquitto-clients
 
 # === Remote Access ===
