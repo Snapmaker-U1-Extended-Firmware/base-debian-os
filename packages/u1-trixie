@@ -32,6 +32,9 @@ ifupdown
 # === Networking - WiFi ===
 # Required for wireless connectivity (BCM43438a1 chipset support)
 wpasupplicant
+iw
+net-tools
+wireless-tools
 
 # === Remote Access ===
 # SSH server and client for remote administration
