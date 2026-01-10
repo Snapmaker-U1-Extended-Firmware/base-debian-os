@@ -12,7 +12,7 @@ if [[ $# -ne 3 ]]; then
   echo "Usage: $0 <suite> <packages-file> <out.tgz>"
   echo ""
   echo "Arguments:"
-  echo "  suite           Debian suite (e.g., trixie, bookworm, bullseye)"
+  echo "  suite           Debian suite (e.g., nt, bookworm, bullseye)"
   echo "  packages-file   Path to file containing package list"
   echo "  out.tgz         Output tarball path"
   echo ""
@@ -86,6 +86,23 @@ if ! chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage; then
   echo ">> Second stage bootstrap failed! Log contents:"
   cat "$ROOTFS_DIR/debootstrap/debootstrap.log" 2>/dev/null || echo "No log file found"
   exit 1
+fi
+
+CHROOT_SCRIPTS_DIR="$PACKAGES_FILE.d"
+if [[ -d "$CHROOT_SCRIPTS_DIR" ]]; then
+  echo ">> Executing chroot scripts from $CHROOT_SCRIPTS_DIR..."
+  cp -rv "$CHROOT_SCRIPTS_DIR" "$ROOTFS_DIR/tmp/chroot-scripts/"
+
+  for script in "$ROOTFS_DIR/tmp/chroot-scripts"/*.sh; do
+    script_name=$(basename "$script")
+    echo ">> Running $script_name..."
+    if ! chroot "$ROOTFS_DIR" "/tmp/chroot-scripts/$script_name"; then
+      echo ">> Warning: Script $script_name failed"
+      exit 1
+    fi
+  done
+
+  rm -rf "$ROOTFS_DIR/tmp/chroot-scripts"
 fi
 
 echo ">> Cleaning up..."
