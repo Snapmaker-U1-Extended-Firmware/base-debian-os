@@ -2,6 +2,12 @@
 
 set -e
 
+DEBUG=
+if [[ "$1" == "--debug" ]]; then
+  DEBUG=1
+  shift
+fi
+
 if [[ $# -ne 3 ]]; then
   echo "Usage: $0 <suite> <packages-file> <out.tgz>"
   echo ""
@@ -27,6 +33,10 @@ TMP_DIR="${REPO_ROOT}/tmp"
 ROOTFS_DIR="${TMP_DIR}/rootfs-$$"
 
 cleanup() {
+  if [[ -n "$DEBUG" ]]; then
+    echo ">> Debug mode enabled; preserving temporary rootfs at $ROOTFS_DIR"
+    return
+  fi
   if [[ -d "$ROOTFS_DIR" ]]; then
     echo ">> Cleaning up temporary rootfs..."
     rm -rf "$ROOTFS_DIR"
@@ -57,7 +67,6 @@ rm -rf "$ROOTFS_DIR"
 echo ">> Bootstrapping Debian $SUITE for $ARCH..."
 echo ">> Packages: $PACKAGES"
 
-export APT_CONFIG=/dev/null
 export DEBIAN_FRONTEND=noninteractive
 
 if ! debootstrap \
@@ -71,13 +80,6 @@ if ! debootstrap \
   cat "$ROOTFS_DIR/debootstrap/debootstrap.log" 2>/dev/null || echo "No log file found"
   exit 1
 fi
-
-echo ">> Disabling apt proxy auto-detection..."
-mkdir -p "$ROOTFS_DIR/etc/apt/apt.conf.d"
-cat > "$ROOTFS_DIR/etc/apt/apt.conf.d/99no-proxy-autodetect" <<'EOF'
-Acquire::http::Proxy-Auto-Detect "";
-Acquire::https::Proxy-Auto-Detect "";
-EOF
 
 echo ">> Running second stage bootstrap..."
 if ! chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage; then
