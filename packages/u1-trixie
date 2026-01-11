@@ -66,6 +66,10 @@ pkg-config
 libffi-dev
 libexpat1-dev
 
+# === Multimedia ===
+# Media processing and encoding tools
+ffmpeg
+
 # === Libraries - Network ===
 libcurl4t64
 libcurl4-openssl-dev
